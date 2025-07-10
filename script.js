@@ -1,3 +1,5 @@
+require('dotenv').config(); // Carregando as variáveis do .env
+
 const apiKeyInput = document.getElementById('apiKey');
 const gameSelect = document.getElementById('gameSelect');
 const questionInput = document.getElementById('questionInput');
@@ -16,7 +18,7 @@ const askIA = async (question, game, apiKey) => {
     }]
 
     // Chamada da API Gemini
-    const response = await fetch()
+    const response = await fetch (geminiURL, )
 
 }
 
