@@ -5,7 +5,6 @@ const askButton = document.getElementById('askButton');
 const aiResponse = document.getElementById('aiResponse');
 const form = document.getElementById('form');
 
-// AIzaSyBlknkXakT7g8NWzE9nY9X4G3aQDM8DErc
 const askIA = async (question, game, apiKey) => {
     const model = 'gemini-2.5-flash';
     const geminiURL = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
