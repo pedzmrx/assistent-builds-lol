@@ -1,5 +1,3 @@
-require('dotenv').config(); // Carregando as variáveis do .env
-
 const apiKeyInput = document.getElementById('apiKey');
 const gameSelect = document.getElementById('gameSelect');
 const questionInput = document.getElementById('questionInput');
@@ -7,22 +5,71 @@ const askButton = document.getElementById('askButton');
 const aiResponse = document.getElementById('aiResponse');
 const form = document.getElementById('form');
 
+const markdownToHTML = (text) => {
+    const converter = new showdown.Converter();
+    return converter.makeHtml(text);
+}
+
 const askIA = async (question, game, apiKey) => {
     const model = 'gemini-2.5-flash';
     const geminiURL = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-    const ask = ``
-    const contets = [{
+    const ask = `
+    ## Especialidade 
+    Você é um especialista assistente de meta para o jogo ${game}
+
+    ## Tarefa
+    Você deve responder a pergunta do usuário sobre o jogo ${game}, estratégias, builds e dicas de forma clara e objetiva, utilizando o conhecimento que você possui sobre o jogo.
+
+    ## Regras
+    - Se você não souber a resposta, responda que não sabe e não invente informações.
+    - Se a pergunta não está relacionada ao jogo ${game}, informe que não pode responder.
+    = Considere a data atual ${new Date().toLocaleDateString()}.
+    - Faça pesquisas atualizadas sobre o patch atual baseado na data atual para dar uma resposta coerente
+    - Nunca responda itens que você não tenha certeza de que existe no patch atual.
+
+    ## Resposta
+    - Economize na resposta, seja breve e direto ao ponto até no máximo 500 caracteres.
+    - Responda em markdown para que o texto seja formatado corretamente.
+    - Não precisa fazer nenhuma saudação ou despedida, apenas responda a pergunta do usuário.
+
+    ## Exemplo de resposta
+    pergunta do usuário: "Qual é a melhor build para o campeão X no patch atual?"
+    resposta: "A melhor build para o campeão X no patch atual é: \n\n **itens**\n\n\ coloque os itens aqui.\n\n\** Runas**\n\n\ coloque as runas aqui.
+
+    ---
+
+    Aqui está a pergunta do usuário: ${question}
+    `;
+
+    const contents = [{
+        role: "user",
         parts: [{
             text: ask
         }]
     }]
 
+    const tools = [{
+        google_search: {}
+    }]
+
     // Chamada da API Gemini
-    const response = await fetch (geminiURL, )
+    const response = await fetch (geminiURL, {
+        method: 'POST',
+        headers: {
+            'Content-Type' : 'application/json'
+        },
+        body: JSON.stringify({
+            contents,
+            tools
+        })
+    })
+
+    const data = await response.json();
+    return data.candidates[0].content.parts[0].text;
 
 }
 
-const sendForm = (event) => {
+const sendForm = async (event) => {
     event.preventDefault();
     const apiKey = apiKeyInput.value
     const game = gameSelect.value;
@@ -39,10 +86,11 @@ const sendForm = (event) => {
 
     try {
         // perguntar para IA.
-        askIA(question, game, apiKey)
+       const text = await askIA(question, game, apiKey)
+       aiResponse.querySelector('.response-content').innerHTML = markdownToHTML(text);
+       aiResponse.classList.remove('hidden');
     } catch (error) {
         console.log('Erro ao enviar a pergunta:', error);
-        
     } finally {
         askButton.disabled = false;
         askButton.textContent = 'Perguntar';
